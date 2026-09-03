@@ -1,0 +1,48 @@
+name: Orders API CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Ruff Lint
+        run: |
+          python -m ruff check .
+
+      - name: MyPy Type Check
+        run: |
+          python -m mypy src
+
+      - name: Run PyTests
+        run: |
+          python -m pytest
+
+      - name: Build Python Package
+        run: |
+          python -m build
+
+      - name: Build Docker Image
+        run: |
+          docker build -t orders-api:${{ github.sha }} .
